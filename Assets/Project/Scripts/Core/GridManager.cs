@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.UIElements;
 
 /// <summary>
 ///  Grid Manager
@@ -7,9 +8,26 @@ using UnityEngine;
 
 public class GridManager : MonoBehaviour
 {
-  [SerializeField] private GameObject nodePrefabs;
-  
+  [SerializeField] private Transform nodePrefabs;
+  [SerializeField] private Transform nodeHolder ;
+  [SerializeField] private int gridWidth = 5;
+  [SerializeField] private int gridHeight = 5;
 
+  private void Start()
+  {
+    InitializerGrid();
+  }
+
+  private void InitializerGrid()
+  {
+    for (int x = 0; x < gridWidth; x++)
+    {
+      for (int y = 0; y < gridHeight; y++)
+      {
+        Transform nodeObject = Instantiate(nodePrefabs, new Vector3(x, 0, y), Quaternion.identity, nodeHolder.transform).transform;
+      }
+    }
+  }
 }
 
 
