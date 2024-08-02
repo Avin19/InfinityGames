@@ -9,7 +9,7 @@ using UnityEngine.UIElements;
 public class GridManager : MonoBehaviour
 {
   [SerializeField] private Transform nodePrefabs;
-  [SerializeField] private Transform nodeHolder ;
+  
   [SerializeField] private int gridWidth = 5;
   [SerializeField] private int gridHeight = 5;
 
@@ -24,7 +24,7 @@ public class GridManager : MonoBehaviour
     {
       for (int y = 0; y < gridHeight; y++)
       {
-        Transform nodeObject = Instantiate(nodePrefabs, new Vector3(x, 0, y), Quaternion.identity, nodeHolder.transform).transform;
+        Transform nodeObject = Instantiate(nodePrefabs, new Vector3(x, y, 0), Quaternion.identity, transform).transform;
       }
     }
   }
