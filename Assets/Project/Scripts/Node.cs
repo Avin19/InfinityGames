@@ -11,7 +11,7 @@ public class Node : MonoBehaviour
   private int rotationState = 0; // 0,1,2,3 represting 0 ,90 ,180 ,270 degree 
   private const int maxRotationState = 4;
 
-  [SerializeField] private bool connectons = false; // Top , Right, Bottom , Left
+
   private SpriteRenderer spriteRenderer;
   private int correctRotation = 0;
   [SerializeField] private Material glowMaterial;
