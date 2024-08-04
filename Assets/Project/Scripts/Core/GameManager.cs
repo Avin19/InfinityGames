@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -35,6 +36,13 @@ public class GameManager : MonoBehaviour
     
   }
 
+  private void Start()
+  {
+    ResettingLevel();
+    SetAllPanelsFalse();
+    mainMenuPanel.SetActive(true);
+  }
+
   private void SetAllPanelsFalse()
   {
     mainMenuPanel.SetActive(false);
@@ -51,8 +59,10 @@ public class GameManager : MonoBehaviour
   public void LevelSetting(int level)
   {
     ResettingLevel();
-    levelPanel.SetActive(false);
+    SetAllPanelsFalse();
+    gamePanel.SetActive(true);
     levels[level].SetActive(true);
+    
   }
 
   public void SettingGame()
@@ -67,6 +77,19 @@ public class GameManager : MonoBehaviour
     {
       l.SetActive(false);
     }
+  }
+
+  public void BackBtnGame()
+  {
+    SetAllPanelsFalse();
+    ResettingLevel();
+    levelPanel.SetActive(true);
+  }
+
+  public void LevelBackBtn()
+  {
+    SetAllPanelsFalse();
+    mainMenuPanel.SetActive(true);
   }
 }
 
