@@ -14,6 +14,7 @@ public class Node : MonoBehaviour
 
   private SpriteRenderer spriteRenderer;
   private int correctRotation = 0;
+  private bool played;
   [SerializeField] private Material glowMaterial;
   [SerializeField] private Material normalMaterial;
 
@@ -45,9 +46,13 @@ public class Node : MonoBehaviour
   private void Update()
   {
     
-    if (correctRotation == transform.rotation.z)
+    if (correctRotation == transform.rotation.z )
     {
       spriteRenderer.sharedMaterial = glowMaterial;
+      if(!played){
+        AudioManager.Instance.NodeCorrectPosition();
+        played = true;
+      }
     }
     else
     {

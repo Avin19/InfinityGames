@@ -53,12 +53,14 @@ public class GameManager : MonoBehaviour
   public void StartGame()
   {
     SetAllPanelsFalse();
+    AudioManager.Instance.ButtonClick();
     levelPanel.SetActive(true);
   }
 
   public void LevelSetting(int level)
   {
     ResettingLevel();
+    AudioManager.Instance.ButtonClick();
     SetAllPanelsFalse();
     gamePanel.SetActive(true);
     levels[level].SetActive(true);
@@ -67,6 +69,7 @@ public class GameManager : MonoBehaviour
 
   public void SettingGame()
   {
+    AudioManager.Instance.ButtonClick();
     SetAllPanelsFalse();
     settingPanel.SetActive(true);
   }
@@ -81,6 +84,7 @@ public class GameManager : MonoBehaviour
 
   public void BackBtnGame()
   {
+    AudioManager.Instance.ButtonClick();
     SetAllPanelsFalse();
     ResettingLevel();
     levelPanel.SetActive(true);
@@ -88,9 +92,12 @@ public class GameManager : MonoBehaviour
 
   public void LevelBackBtn()
   {
+    AudioManager.Instance.ButtonClick();
     SetAllPanelsFalse();
     mainMenuPanel.SetActive(true);
   }
+
+ 
 }
 
 
