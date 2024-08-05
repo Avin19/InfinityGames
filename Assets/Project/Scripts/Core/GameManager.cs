@@ -21,6 +21,7 @@ public class GameManager : MonoBehaviour
   [SerializeField] private GameObject levelPanel;
   [SerializeField] private GameObject gamePanel;
   [SerializeField] private GameObject settingPanel;
+  [SerializeField] private GameObject winPanel;
 
   [Header("Level")] 
   [SerializeField] private GameObject[] levels;
@@ -64,6 +65,7 @@ public class GameManager : MonoBehaviour
     levelPanel.SetActive(false);
     settingPanel.SetActive(false);
     gamePanel.SetActive(false);
+    winPanel.SetActive(false);
   }
   public void StartGame()
   {
@@ -96,6 +98,7 @@ public class GameManager : MonoBehaviour
       AudioManager.Instance.ButtonClick();
       SetAllPanelsFalse();
       gamePanel.SetActive(true);
+      
       levels[level].SetActive(true);
       nodeHolder = levels[level].GetComponentInChildren<NodeHolder>().gameObject;
       onLevel?.Invoke(this, EventArgs.Empty);
@@ -140,9 +143,12 @@ public class GameManager : MonoBehaviour
     return nodeHolder;
   }
 
+  
   public void LevelCompleted()
   {
-    BackBtnGame();
+    AudioManager.Instance.LevelWin();
+    SetAllPanelsFalse();
+    winPanel.SetActive(true);
     if (currentLevel < levels.Length)
     {
       currentLevel++;
@@ -150,10 +156,20 @@ public class GameManager : MonoBehaviour
       levelText2.text = $" Level : {currentLevel+1}";
       PlayerPrefs.SetFloat("CurrentLevel",currentLevel);
       LockLevel();
+      Invoke(nameof(BackToLevel),2f);
       
+    }
+    else
+    {
+      currentLevel = 0;
     }
   }
 
+  private void BackToLevel()
+  {
+    SetAllPanelsFalse();
+    BackBtnGame();
+  }
  
 }
 

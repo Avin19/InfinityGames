@@ -46,6 +46,11 @@ public class AudioManager : MonoBehaviour
   {
     _audio.PlayOneShot(audioClips[1]);
   }
+
+  public void LevelWin()
+  {
+    _audio.PlayOneShot(audioClips[2]);
+  }
 }
 
 
