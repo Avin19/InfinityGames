@@ -6,6 +6,7 @@ using UnityEngine.UI;
 public class GameManager : MonoBehaviour
 {
   public static GameManager Instance { get; private set; }
+  public event EventHandler onLevel;
 
   [Header("MainMenuButton")] 
 
@@ -20,8 +21,11 @@ public class GameManager : MonoBehaviour
   [SerializeField] private GameObject gamePanel;
   [SerializeField] private GameObject settingPanel;
 
-  [Header("Level")] [SerializeField] private GameObject[] levels;
-  
+  [Header("Level")] 
+  [SerializeField] private GameObject[] levels;
+
+  private GameObject nodeHolder;
+ [SerializeField] private int currentLevel =0;
   private void Awake()
   {
     if (Instance != null)
@@ -57,14 +61,24 @@ public class GameManager : MonoBehaviour
     levelPanel.SetActive(true);
   }
 
+  private void LockLevel()
+  {
+    
+  }
   public void LevelSetting(int level)
   {
-    ResettingLevel();
-    AudioManager.Instance.ButtonClick();
-    SetAllPanelsFalse();
-    gamePanel.SetActive(true);
-    levels[level].SetActive(true);
-    
+
+    if (level <= currentLevel)
+    {
+      ResettingLevel();
+      AudioManager.Instance.ButtonClick();
+      SetAllPanelsFalse();
+      gamePanel.SetActive(true);
+      levels[level].SetActive(true);
+      nodeHolder = levels[level].GetComponentInChildren<NodeHolder>().gameObject;
+      onLevel?.Invoke(this, EventArgs.Empty);
+    }
+
   }
 
   public void SettingGame()
@@ -95,6 +109,22 @@ public class GameManager : MonoBehaviour
     AudioManager.Instance.ButtonClick();
     SetAllPanelsFalse();
     mainMenuPanel.SetActive(true);
+  }
+
+
+
+  public GameObject GetNodeHolder()
+  {
+    return nodeHolder;
+  }
+
+  public void LevelCompleted()
+  {
+    BackBtnGame();
+    if (currentLevel < levels.Length)
+    {
+      currentLevel++;
+    }
   }
 
  

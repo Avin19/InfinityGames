@@ -11,12 +11,20 @@ public class Node : MonoBehaviour
   private int rotationState = 0; // 0,1,2,3 represting 0 ,90 ,180 ,270 degree 
   private const int maxRotationState = 4;
 
-
+  public event EventHandler onNodeCliked;
   private SpriteRenderer spriteRenderer;
   private int correctRotation = 0;
   private bool played;
   [SerializeField] private Material glowMaterial;
   [SerializeField] private Material normalMaterial;
+  [SerializeField] private bool isPlusNode;
+  [SerializeField] private bool isStraightNode;
+
+  private void OnEnable()
+  {
+    played = false;
+    RandomPipeRotation();
+  }
 
   private void Start()
   {
@@ -33,7 +41,21 @@ public class Node : MonoBehaviour
 
   private void OnMouseDown()
   {
-    RotateNode();
+    
+    if (isPlusNode)
+    {
+      spriteRenderer.sharedMaterial = glowMaterial;
+      if (!played)
+      {
+        AudioManager.Instance.NodeCorrectPosition();
+        played = true;
+      }
+    }
+    else
+    {
+      onNodeCliked?.Invoke(this, EventArgs.Empty);
+      RotateNode();
+    }
   }
 
   private void RotateNode()
@@ -45,11 +67,26 @@ public class Node : MonoBehaviour
 
   private void Update()
   {
-    
-    if (correctRotation == transform.rotation.z )
+    if (isStraightNode)
+    {
+       StraightNodeCheck();
+    }
+
+    if(!isPlusNode && !isStraightNode)
+    {
+      TurnNodeCheck();
+    }
+   
+  }
+
+  private void StraightNodeCheck()
+  {
+    if (Mathf.Approximately(correctRotation, transform.rotation.z)  ||  Mathf.Approximately(180f, transform.rotation.z))
     {
       spriteRenderer.sharedMaterial = glowMaterial;
-      if(!played){
+
+      if (!played)
+      {
         AudioManager.Instance.NodeCorrectPosition();
         played = true;
       }
@@ -58,7 +95,29 @@ public class Node : MonoBehaviour
     {
       spriteRenderer.sharedMaterial = normalMaterial;
     }
-   
+  }
+
+  private void TurnNodeCheck()
+  {
+    if (Mathf.Approximately(correctRotation, transform.rotation.z))
+    {
+      spriteRenderer.sharedMaterial = glowMaterial;
+
+      if (!played)
+      {
+        AudioManager.Instance.NodeCorrectPosition();
+        played = true;
+      }
+    }
+    else
+    {
+      spriteRenderer.sharedMaterial = normalMaterial;
+    }
+  }
+
+  public bool ConnectionStatus()
+  {
+    return played;
   }
 }
 
