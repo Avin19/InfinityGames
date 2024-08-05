@@ -1,6 +1,7 @@
 using System;
 using UnityEngine;
 using UnityEngine.UI;
+using TMPro;
 
 
 public class GameManager : MonoBehaviour
@@ -25,7 +26,12 @@ public class GameManager : MonoBehaviour
   [SerializeField] private GameObject[] levels;
 
   private GameObject nodeHolder;
+  [SerializeField] private TextMeshProUGUI levelText;
+  [SerializeField] private TextMeshProUGUI levelText2;
  [SerializeField] private int currentLevel =0;
+
+ [Header("LevelButton")] [SerializeField]
+ private Button[] levelBtn;
   private void Awake()
   {
     if (Instance != null)
@@ -45,6 +51,11 @@ public class GameManager : MonoBehaviour
     ResettingLevel();
     SetAllPanelsFalse();
     mainMenuPanel.SetActive(true);
+    
+
+    currentLevel = (int) PlayerPrefs.GetFloat("CurrentLevel");
+    levelText.text = $" Level : {currentLevel+1}";
+    levelText2.text = $" Level : {currentLevel+1}";
   }
 
   private void SetAllPanelsFalse()
@@ -59,11 +70,22 @@ public class GameManager : MonoBehaviour
     SetAllPanelsFalse();
     AudioManager.Instance.ButtonClick();
     levelPanel.SetActive(true);
+    LockLevel();
   }
 
   private void LockLevel()
   {
-    
+    for (int i = 0; i< levelBtn.Length; i++)
+    {
+      if (i <= currentLevel )
+      {
+        levelBtn[i].GetComponent<Image>().color = Color.white;
+      }
+      else
+      {
+        levelBtn[i].GetComponent<Image>().color = Color.red;
+      }
+    }
   }
   public void LevelSetting(int level)
   {
@@ -124,6 +146,11 @@ public class GameManager : MonoBehaviour
     if (currentLevel < levels.Length)
     {
       currentLevel++;
+      levelText.text = $" Level : {currentLevel+1}";
+      levelText2.text = $" Level : {currentLevel+1}";
+      PlayerPrefs.SetFloat("CurrentLevel",currentLevel);
+      LockLevel();
+      
     }
   }
 
