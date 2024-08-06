@@ -1,0 +1,34 @@
+@startuml
+class GameManager {
+    + {static} Instance : GameManager <<get>>
+    +  <<event>> onLevel : EventHandler 
+    - startBtn : Button
+    - quitBtn : Button
+    - settingBtn : Button
+    - mainMenuPanel : GameObject
+    - levelPanel : GameObject
+    - gamePanel : GameObject
+    - settingPanel : GameObject
+    - winPanel : GameObject
+    - levels : GameObject[]
+    - nodeHolder : GameObject
+    - levelText : TextMeshProUGUI
+    - levelText2 : TextMeshProUGUI
+    - currentLevel : int = 0
+    - levelBtn : Button[]
+    - Awake() : void
+    - Start() : void
+    - SetAllPanelsFalse() : void
+    + StartGame() : void
+    - LockLevel() : void
+    + LevelSetting(level:int) : void
+    + SettingGame() : void
+    - ResettingLevel() : void
+    + BackBtnGame() : void
+    + LevelBackBtn() : void
+    + GetNodeHolder() : GameObject
+    + LevelCompleted() : void
+    - BackToLevel() : void
+}
+MonoBehaviour <|-- GameManager
+@enduml

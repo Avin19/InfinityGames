@@ -1,0 +1,14 @@
+@startuml
+class GridManager {
+    - nodes : GameObject[]
+    - nodeHolder : GameObject
+    - nodeConnectionStatus : bool[]
+    - notcompleted : bool = true
+    - Start() : void
+    - OnLevelChange(sender:object, e:EventArgs) : void
+    - SetupLevelInfo() : void
+    - CheckStatus() : void
+    - Update() : void
+}
+MonoBehaviour <|-- GridManager
+@enduml

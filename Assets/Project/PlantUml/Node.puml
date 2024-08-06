@@ -1,0 +1,24 @@
+@startuml
+class Node {
+    - rotationState : int = 0
+    - <<const>> maxRotationState : int = 4
+    +  <<event>> onNodeCliked : EventHandler 
+    - spriteRenderer : SpriteRenderer
+    - correctRotation : int = 0
+    - played : bool
+    - glowMaterial : Material
+    - normalMaterial : Material
+    - isPlusNode : bool
+    - isStraightNode : bool
+    - OnEnable() : void
+    - Start() : void
+    - RandomPipeRotation() : void
+    - OnMouseDown() : void
+    - RotateNode() : void
+    - Update() : void
+    - StraightNodeCheck() : void
+    - TurnNodeCheck() : void
+    + ConnectionStatus() : bool
+}
+MonoBehaviour <|-- Node
+@enduml
