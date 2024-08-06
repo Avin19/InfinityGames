@@ -27,11 +27,11 @@ Track progress and scores through the levels menu.
 Enjoy enhanced visual and responsive feedback.
 
 
+### Class Diagram 
+![ Class Diagram](Screenshot/include.png)
+
 ### ScreenShoot 
 
 ![Menu Main](Screenshot/mainmenu.png)
 ![Level](Screenshot/level.png)
 
-
-### Class Diagram 
-![ Class Diagram](Screenshot/include.png)
