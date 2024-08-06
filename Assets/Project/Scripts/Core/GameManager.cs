@@ -149,25 +149,24 @@ public class GameManager : MonoBehaviour
     AudioManager.Instance.LevelWin();
     SetAllPanelsFalse();
     winPanel.SetActive(true);
-    if (currentLevel < levels.Length)
+    if (currentLevel < levels.Length-1)
     {
       currentLevel++;
-      levelText.text = $" Level : {currentLevel+1}";
-      levelText2.text = $" Level : {currentLevel+1}";
-      PlayerPrefs.SetFloat("CurrentLevel",currentLevel);
-      LockLevel();
-      Invoke(nameof(BackToLevel),2f);
-      
     }
     else
     {
       currentLevel = 0;
     }
+    levelText.text = $" Level : {currentLevel+1}";
+    levelText2.text = $" Level : {currentLevel+1}";
+    PlayerPrefs.SetFloat("CurrentLevel",currentLevel);
+    Invoke("BackToLevel",1f);
   }
 
   private void BackToLevel()
   {
     SetAllPanelsFalse();
+    LockLevel();
     BackBtnGame();
   }
  

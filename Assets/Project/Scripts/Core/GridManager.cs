@@ -45,11 +45,7 @@ public class GridManager : MonoBehaviour
     private void CheckStatus()
     {
         notcompleted = nodeConnectionStatus.Any(element => element == false);
-        if (notcompleted)
-        {
-            // Do nothing 
-        }
-        else
+        if (!notcompleted)
         {
             notcompleted = true;
             if (gameObject.activeSelf)
@@ -58,9 +54,8 @@ public class GridManager : MonoBehaviour
 
             }
             gameObject.SetActive(false);
-            
-            
         }
+        
     }
 
     private void Update()
@@ -71,10 +66,6 @@ public class GridManager : MonoBehaviour
             nodeConnectionStatus[i] = nodes[i].transform.GetComponent<Node>().ConnectionStatus();
             CheckStatus();
         }
-       
-       
-       
-
 
     }
 }

@@ -53,9 +53,10 @@ public class Node : MonoBehaviour
     }
     else
     {
-      onNodeCliked?.Invoke(this, EventArgs.Empty);
+      
       RotateNode();
     }
+    onNodeCliked?.Invoke(this, EventArgs.Empty);
   }
 
   private void RotateNode()
@@ -81,7 +82,7 @@ public class Node : MonoBehaviour
 
   private void StraightNodeCheck()
   {
-    if (Mathf.Approximately(correctRotation, transform.rotation.z)  ||  Mathf.Approximately(180f, transform.rotation.z))
+    if (Mathf.Approximately(correctRotation, transform.rotation.z)  ||  Mathf.Approximately(180, transform.rotation.z))
     {
       spriteRenderer.sharedMaterial = glowMaterial;
 

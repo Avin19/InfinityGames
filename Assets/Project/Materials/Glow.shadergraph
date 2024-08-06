@@ -70,20 +70,6 @@
             },
             "m_InputSlot": {
                 "m_Node": {
-                    "m_Id": "2a0dd48373b04b4cb0d3a1362c60c19b"
-                },
-                "m_SlotId": 0
-            }
-        },
-        {
-            "m_OutputSlot": {
-                "m_Node": {
-                    "m_Id": "19955cce021c451795e7dc51e731e9f0"
-                },
-                "m_SlotId": 2
-            },
-            "m_InputSlot": {
-                "m_Node": {
                     "m_Id": "33a147a41c4746a492defdfdc77544a5"
                 },
                 "m_SlotId": 0
@@ -99,6 +85,20 @@
             "m_InputSlot": {
                 "m_Node": {
                     "m_Id": "543341da5fc74f90ae27dd8995a0dfb7"
+                },
+                "m_SlotId": 0
+            }
+        },
+        {
+            "m_OutputSlot": {
+                "m_Node": {
+                    "m_Id": "33a147a41c4746a492defdfdc77544a5"
+                },
+                "m_SlotId": 1
+            },
+            "m_InputSlot": {
+                "m_Node": {
+                    "m_Id": "2a0dd48373b04b4cb0d3a1362c60c19b"
                 },
                 "m_SlotId": 0
             }
@@ -450,10 +450,10 @@
         "m_Expanded": true,
         "m_Position": {
             "serializedVersion": "2",
-            "x": 29.599977493286134,
-            "y": 68.80001068115235,
-            "width": 208.0,
-            "height": 301.5999450683594
+            "x": 25.600008010864259,
+            "y": 224.00001525878907,
+            "width": 130.39999389648438,
+            "height": 117.59999084472656
         }
     },
     "m_Slots": [
@@ -473,7 +473,7 @@
         "plus"
     ],
     "m_Precision": 0,
-    "m_PreviewExpanded": true,
+    "m_PreviewExpanded": false,
     "m_DismissedVersion": 0,
     "m_PreviewMode": 0,
     "m_CustomColors": {
@@ -973,9 +973,9 @@
     "hlslDeclarationOverride": 0,
     "m_Hidden": false,
     "m_Value": {
-        "r": 0.0,
-        "g": 0.0,
-        "b": 0.0,
+        "r": 362.0386657714844,
+        "g": 362.0386657714844,
+        "b": 362.0386657714844,
         "a": 0.0
     },
     "isMainColor": false,
