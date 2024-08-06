@@ -29,8 +29,8 @@ Enjoy enhanced visual and responsive feedback.
 
 ### ScreenShoot 
 
-![Menu Main](Screenshot/mainmenu.jpg)
-![Level](Screenshot/level.jpg)
+![Menu Main](Screenshot/mainmenu.png)
+![Level](Screenshot/level.png)
 
 
 ### Class Diagram 
