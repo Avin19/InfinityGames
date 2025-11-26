@@ -9,13 +9,13 @@ public class GameManager : MonoBehaviour
   public static GameManager Instance { get; private set; }
   public event EventHandler onLevel;
 
-  [Header("MainMenuButton")] 
+  [Header("MainMenuButton")]
 
   [SerializeField] private Button startBtn;
   [SerializeField] private Button quitBtn;
   [SerializeField] private Button settingBtn;
 
-  [Header(" Panel")] 
+  [Header(" Panel")]
   [SerializeField] private GameObject mainMenuPanel;
 
   [SerializeField] private GameObject levelPanel;
@@ -23,16 +23,17 @@ public class GameManager : MonoBehaviour
   [SerializeField] private GameObject settingPanel;
   [SerializeField] private GameObject winPanel;
 
-  [Header("Level")] 
+  [Header("Level")]
   [SerializeField] private GameObject[] levels;
 
   private GameObject nodeHolder;
   [SerializeField] private TextMeshProUGUI levelText;
   [SerializeField] private TextMeshProUGUI levelText2;
- [SerializeField] private int currentLevel =0;
+  [SerializeField] private int currentLevel = 0;
 
- [Header("LevelButton")] [SerializeField]
- private Button[] levelBtn;
+  [Header("LevelButton")]
+  [SerializeField]
+  private Button[] levelBtn;
   private void Awake()
   {
     if (Instance != null)
@@ -42,9 +43,9 @@ public class GameManager : MonoBehaviour
 
     Instance = this;
     startBtn.onClick.AddListener(() => StartGame());
-    settingBtn.onClick.AddListener( () => SettingGame());
-    quitBtn.onClick.AddListener( () => Application.Quit());
-    
+    settingBtn.onClick.AddListener(() => SettingGame());
+    quitBtn.onClick.AddListener(() => Application.Quit());
+
   }
 
   private void Start()
@@ -52,11 +53,11 @@ public class GameManager : MonoBehaviour
     ResettingLevel();
     SetAllPanelsFalse();
     mainMenuPanel.SetActive(true);
-    
 
-    currentLevel = (int) PlayerPrefs.GetFloat("CurrentLevel");
-    levelText.text = $" Level : {currentLevel+1}";
-    levelText2.text = $" Level : {currentLevel+1}";
+
+    currentLevel = (int)PlayerPrefs.GetFloat("CurrentLevel");
+    levelText.text = $" Level : {currentLevel + 1}";
+    levelText2.text = $" Level : {currentLevel + 1}";
   }
 
   private void SetAllPanelsFalse()
@@ -73,13 +74,14 @@ public class GameManager : MonoBehaviour
     AudioManager.Instance.ButtonClick();
     levelPanel.SetActive(true);
     LockLevel();
+    AdManager.Instance.ShowBanner();
   }
 
   private void LockLevel()
   {
-    for (int i = 0; i< levelBtn.Length; i++)
+    for (int i = 0; i < levelBtn.Length; i++)
     {
-      if (i <= currentLevel )
+      if (i <= currentLevel)
       {
         levelBtn[i].GetComponent<Image>().color = Color.white;
       }
@@ -98,7 +100,7 @@ public class GameManager : MonoBehaviour
       AudioManager.Instance.ButtonClick();
       SetAllPanelsFalse();
       gamePanel.SetActive(true);
-      
+
       levels[level].SetActive(true);
       nodeHolder = levels[level].GetComponentInChildren<NodeHolder>().gameObject;
       onLevel?.Invoke(this, EventArgs.Empty);
@@ -127,6 +129,7 @@ public class GameManager : MonoBehaviour
     SetAllPanelsFalse();
     ResettingLevel();
     levelPanel.SetActive(true);
+    AdManager.Instance.ShowInterstitial();
   }
 
   public void LevelBackBtn()
@@ -134,6 +137,8 @@ public class GameManager : MonoBehaviour
     AudioManager.Instance.ButtonClick();
     SetAllPanelsFalse();
     mainMenuPanel.SetActive(true);
+    AdManager.Instance.ShowRewarded();
+
   }
 
 
@@ -143,13 +148,13 @@ public class GameManager : MonoBehaviour
     return nodeHolder;
   }
 
-  
+
   public void LevelCompleted()
   {
     AudioManager.Instance.LevelWin();
     SetAllPanelsFalse();
     winPanel.SetActive(true);
-    if (currentLevel < levels.Length-1)
+    if (currentLevel < levels.Length - 1)
     {
       currentLevel++;
     }
@@ -157,10 +162,10 @@ public class GameManager : MonoBehaviour
     {
       currentLevel = 0;
     }
-    levelText.text = $" Level : {currentLevel+1}";
-    levelText2.text = $" Level : {currentLevel+1}";
-    PlayerPrefs.SetFloat("CurrentLevel",currentLevel);
-    Invoke("BackToLevel",1f);
+    levelText.text = $" Level : {currentLevel + 1}";
+    levelText2.text = $" Level : {currentLevel + 1}";
+    PlayerPrefs.SetFloat("CurrentLevel", currentLevel);
+    Invoke("BackToLevel", 1f);
   }
 
   private void BackToLevel()
@@ -168,8 +173,10 @@ public class GameManager : MonoBehaviour
     SetAllPanelsFalse();
     LockLevel();
     BackBtnGame();
+    AdManager.Instance.ShowInterstitial();
+
   }
- 
+
 }
 
 
