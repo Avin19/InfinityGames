@@ -143,7 +143,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 88bfc9f9d83c21d4eb7e5d0816384595, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  isPlusNode: 0
-  isStraightNode: 1
-  glowMaterial: {fileID: 2100000, guid: 6decbdf2938647d47b3805180244294e, type: 2}
-  normalMaterial: {fileID: 10754, guid: 0000000000000000f000000000000000, type: 0}
+  isPlus: 0
+  isStraight: 1
+  isStart: 0
+  isEnd: 0
+  glow: {fileID: 2100000, guid: 6decbdf2938647d47b3805180244294e, type: 2}
+  normal: {fileID: 10754, guid: 0000000000000000f000000000000000, type: 0}
