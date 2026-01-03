@@ -1,69 +1,112 @@
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 
 public class GridManager : MonoBehaviour
 {
-    [Header("Grid Size")]
-    [SerializeField] private int width = 5;
-    [SerializeField] private int height = 7;
+    [Header("Grid Scaling")]
+    [SerializeField] private int baseWidth = 5;
+    [SerializeField] private int baseHeight = 6;
+    [SerializeField] private int levelsPerIncrease = 3;
     [SerializeField] private float cellSize = 1f;
 
-    [Header("Pipe Prefabs")]
+    [Header("Spawn Animation")]
+    [SerializeField] private float spawnDelay = 0.02f;
+    [SerializeField] private float spawnScaleSpeed = 8f;
+
+    [Header("Prefabs")]
     [SerializeField] private GameObject startPrefab;
     [SerializeField] private GameObject endPrefab;
     [SerializeField] private GameObject plusPrefab;
+    [SerializeField] private GameObject straightH;
+    [SerializeField] private GameObject straightV;
+    [SerializeField] private GameObject cornerUR;
+    [SerializeField] private GameObject cornerRD;
+    [SerializeField] private GameObject cornerDL;
+    [SerializeField] private GameObject cornerLU;
 
-    [Header("Straight Prefabs")]
-    [SerializeField] private GameObject straightHorizontalPrefab;
-    [SerializeField] private GameObject straightVerticalPrefab;
+    [Header("Camera")]
+    [SerializeField] private CameraController cameraController;
 
-    [Header("Corner Prefabs")]
-    [SerializeField] private GameObject cornerUpRight;
-    [SerializeField] private GameObject cornerRightDown;
-    [SerializeField] private GameObject cornerDownLeft;
-    [SerializeField] private GameObject cornerLeftUp;
+    private List<Node> nodes = new();
+    private GameObject holder;
+    private Coroutine spawnCoroutine;
 
-    private GameObject nodeHolder;
-    private Node[] nodes;
-    private bool completed;
+    private int width;
+    private int height;
 
     // =========================
     public void GenerateGrid(int level)
     {
-        completed = false;
         ClearGrid();
 
-        nodeHolder = new GameObject("NodeHolder");
+        int inc = level / levelsPerIncrease;
+        width = baseWidth + inc;
+        height = baseHeight + inc;
+
+        // Enable gameplay camera fit
+        cameraController.FitGrid(width, height, cellSize);
+
+        holder = new GameObject("Grid");
 
         List<Vector2Int> path = GeneratePath();
-        Dictionary<Vector2Int, PipeDirection> map = BuildPipeMap(path);
+        Dictionary<Vector2Int, PipeDirection> map = BuildMap(path);
 
-        nodes = new Node[map.Count];
-        int index = 0;
+        spawnCoroutine = StartCoroutine(SpawnGridAnimated(map, path));
+    }
 
-        foreach (var kvp in map)
+    // =========================
+    private IEnumerator SpawnGridAnimated(
+        Dictionary<Vector2Int, PipeDirection> map,
+        List<Vector2Int> path
+    )
+    {
+        nodes.Clear();
+
+        foreach (var kv in map)
         {
-            Vector2Int pos = kvp.Key;
-            PipeDirection dir = kvp.Value;
+            // 🔒 SAFETY: grid destroyed while coroutine running
+            if (holder == null)
+                yield break;
 
-            bool isStart = pos == path.First();
-            bool isEnd = pos == path.Last();
+            Vector2Int p = kv.Key;
+            PipeDirection d = kv.Value;
 
-            GameObject prefab = SelectPrefab(dir, isStart, isEnd);
-            Vector3 worldPos = GetWorldPosition(pos);
+            GameObject prefab = SelectPrefab(d, p == path[0], p == path[^1]);
+            Vector3 pos = GetWorldPos(p);
 
-            GameObject go = Instantiate(
-                prefab,
-                worldPos,
-                Quaternion.identity,
-                nodeHolder.transform
-            );
+            GameObject go = Instantiate(prefab, pos, Quaternion.identity, holder.transform);
+            go.transform.localScale = Vector3.zero;
 
             Node node = go.GetComponent<Node>();
             node.onNodeCliked += OnNodeClicked;
-            nodes[index++] = node;
+            nodes.Add(node);
+
+            float t = 0f;
+            while (t < 1f)
+            {
+                if (go == null || holder == null)
+                    yield break;
+
+                t += Time.deltaTime * spawnScaleSpeed;
+                go.transform.localScale = Vector3.Lerp(Vector3.zero, Vector3.one, t);
+                yield return null;
+            }
+
+            yield return new WaitForSeconds(spawnDelay);
         }
+
+        spawnCoroutine = null;
+    }
+
+    // =========================
+    private void OnNodeClicked(object sender, System.EventArgs e)
+    {
+        GameManager.Instance.RegisterMove();
+
+        if (nodes.All(n => n.ConnectionStatus()))
+            GameManager.Instance.LevelWin();
     }
 
     // =========================
@@ -71,10 +114,9 @@ public class GridManager : MonoBehaviour
     {
         List<Vector2Int> path = new();
 
-        Vector2Int start = new(0, Random.Range(0, height));
+        Vector2Int current = new(0, Random.Range(0, height));
         Vector2Int end = new(width - 1, Random.Range(0, height));
 
-        Vector2Int current = start;
         path.Add(current);
 
         while (current != end)
@@ -92,18 +134,18 @@ public class GridManager : MonoBehaviour
         return path;
     }
 
-    private Dictionary<Vector2Int, PipeDirection> BuildPipeMap(List<Vector2Int> path)
+    private Dictionary<Vector2Int, PipeDirection> BuildMap(List<Vector2Int> path)
     {
         Dictionary<Vector2Int, PipeDirection> map = new();
 
         for (int i = 0; i < path.Count; i++)
         {
-            PipeDirection dir = PipeDirection.None;
+            PipeDirection d = PipeDirection.None;
 
-            if (i > 0) dir |= GetDir(path[i], path[i - 1]);
-            if (i < path.Count - 1) dir |= GetDir(path[i], path[i + 1]);
+            if (i > 0) d |= GetDir(path[i], path[i - 1]);
+            if (i < path.Count - 1) d |= GetDir(path[i], path[i + 1]);
 
-            map[path[i]] = dir;
+            map[path[i]] = d;
         }
 
         return map;
@@ -119,60 +161,50 @@ public class GridManager : MonoBehaviour
     }
 
     // =========================
-    private GameObject SelectPrefab(PipeDirection dir, bool start, bool end)
+    private GameObject SelectPrefab(PipeDirection d, bool isStart, bool isEnd)
     {
-        if (start) return startPrefab;
-        if (end) return endPrefab;
+        if (isStart) return startPrefab;
+        if (isEnd) return endPrefab;
 
-        // PLUS
-        if (dir == (PipeDirection.Up | PipeDirection.Right | PipeDirection.Down | PipeDirection.Left))
-            return plusPrefab;
+        if (d == (PipeDirection.Left | PipeDirection.Right)) return straightH;
+        if (d == (PipeDirection.Up | PipeDirection.Down)) return straightV;
 
-        // STRAIGHTS
-        if (dir == (PipeDirection.Left | PipeDirection.Right))
-            return straightHorizontalPrefab;
+        if (d == (PipeDirection.Up | PipeDirection.Right)) return cornerUR;
+        if (d == (PipeDirection.Right | PipeDirection.Down)) return cornerRD;
+        if (d == (PipeDirection.Down | PipeDirection.Left)) return cornerDL;
+        if (d == (PipeDirection.Left | PipeDirection.Up)) return cornerLU;
 
-        if (dir == (PipeDirection.Up | PipeDirection.Down))
-            return straightVerticalPrefab;
-
-        // CORNERS
-        if (dir == (PipeDirection.Up | PipeDirection.Right)) return cornerUpRight;
-        if (dir == (PipeDirection.Right | PipeDirection.Down)) return cornerRightDown;
-        if (dir == (PipeDirection.Down | PipeDirection.Left)) return cornerDownLeft;
-        if (dir == (PipeDirection.Left | PipeDirection.Up)) return cornerLeftUp;
-
-        // Fallback (should never happen)
         return plusPrefab;
     }
 
-    // =========================
-    private Vector3 GetWorldPosition(Vector2Int gridPos)
+    private Vector3 GetWorldPos(Vector2Int p)
     {
-        float offsetX = -(width - 1) * cellSize * 0.5f;
-        float offsetY = -(height - 1) * cellSize * 0.5f;
+        float ox = -(width - 1) * cellSize * 0.5f;
+        float oy = -(height - 1) * cellSize * 0.5f;
 
         return new Vector3(
-            gridPos.x * cellSize + offsetX,
-            gridPos.y * cellSize + offsetY,
+            p.x * cellSize + ox,
+            p.y * cellSize + oy,
             0f
         );
     }
 
     // =========================
-    private void OnNodeClicked(object sender, System.EventArgs e)
-    {
-        if (completed) return;
-
-        if (nodes.All(n => n.ConnectionStatus()))
-        {
-            completed = true;
-            GameManager.Instance.LevelCompleted();
-        }
-    }
-
     private void ClearGrid()
     {
-        if (nodeHolder != null)
-            Destroy(nodeHolder);
+        // 🔥 STOP animation coroutine FIRST
+        if (spawnCoroutine != null)
+        {
+            StopCoroutine(spawnCoroutine);
+            spawnCoroutine = null;
+        }
+
+        if (holder != null)
+        {
+            Destroy(holder);
+            holder = null;
+        }
+
+        nodes.Clear();
     }
 }
