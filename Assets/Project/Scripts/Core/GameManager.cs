@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
+using System;
 
 public class GameManager : MonoBehaviour
 {
@@ -10,6 +11,7 @@ public class GameManager : MonoBehaviour
   [SerializeField] private GameObject menuPanel;
   [SerializeField] private GameObject gamePanel;
   [SerializeField] private GameObject winPanel;
+  [SerializeField] private GameObject settingPanel;
 
   [Header("Win Panel UI")]
   [SerializeField] private TextMeshProUGUI resultText;
@@ -18,6 +20,9 @@ public class GameManager : MonoBehaviour
   [SerializeField] private Button menuBtn;
   [SerializeField] private Button gameplaybtn;   // back from gameplay
   [SerializeField] private Button startBtn;
+  [SerializeField] private Button settingBtn;
+  [SerializeField] private Button quitBtn;
+  [SerializeField] private Button backBtn;
 
   [Header("Ad Buttons")]
   [SerializeField] private Button rewardTimeBtn;  // rewarded ad
@@ -29,8 +34,8 @@ public class GameManager : MonoBehaviour
   [SerializeField] private TextMeshProUGUI timerText;
 
   [Header("Limits")]
-  [SerializeField] private int baseMoves = 15;
-  [SerializeField] private float baseTime = 30f;
+  [SerializeField] private int baseMoves = 5;
+  [SerializeField] private float baseTime = 5f;
   [SerializeField] private int extraMovesFromAd = 5;
   [SerializeField] private float extraTimeFromAd = 15f;
 
@@ -60,12 +65,19 @@ public class GameManager : MonoBehaviour
     replayBtn.onClick.AddListener(ReplayLevel);
     menuBtn.onClick.AddListener(BackToMenu);
     gameplaybtn.onClick.AddListener(BackToMenu);
+    settingBtn.onClick.AddListener(SettingPanel);
+    backBtn.onClick.AddListener(BackToMenu);
+    quitBtn.onClick.AddListener(() => Application.Quit());
 
     if (rewardTimeBtn != null)
       rewardTimeBtn.onClick.AddListener(WatchAdForExtraTime);
 
-    if (rewardMoveBtn != null)
-      rewardMoveBtn.onClick.AddListener(WatchAdForExtraMoves);
+
+  }
+
+  private void SettingPanel()
+  {
+    settingPanel.SetActive(true);
   }
 
   private void Start()
@@ -93,10 +105,11 @@ public class GameManager : MonoBehaviour
   {
     isLevelRunning = false;
     cameraController.ResetToMenu();
-
+    settingPanel.SetActive(false);
     menuPanel.SetActive(true);
     gamePanel.SetActive(false);
     winPanel.SetActive(false);
+
   }
 
 
@@ -110,7 +123,7 @@ public class GameManager : MonoBehaviour
   {
     // scale difficulty slightly with level
     remainingMoves = baseMoves + (CurrentLevel / 3);
-    remainingTime = baseTime + (CurrentLevel * 2);
+    remainingTime = baseTime + (CurrentLevel / 4);
 
     isLevelRunning = true;
 
@@ -204,6 +217,8 @@ public class GameManager : MonoBehaviour
   // =========================
   public void WatchAdForExtraTime()
   {
+    nextBtn.gameObject.SetActive(false);
+    replayBtn.gameObject.SetActive(false);
     AdMobManager.Instance.ShowRewarded(() =>
     {
       remainingTime += extraTimeFromAd;
@@ -211,20 +226,13 @@ public class GameManager : MonoBehaviour
     });
   }
 
-  public void WatchAdForExtraMoves()
-  {
-    AdMobManager.Instance.ShowInterstitial();
-
-    remainingMoves += extraMovesFromAd;
-    moveText.text = $"Moves: {remainingMoves}";
-
-    ResumeAfterAd();
-  }
-
   private void ResumeAfterAd()
   {
+    nextBtn.gameObject.SetActive(true);
+    replayBtn.gameObject.SetActive(true);
     isLevelRunning = true;
     winPanel.SetActive(false);
     gamePanel.SetActive(true);
+    StartGame();
   }
 }
