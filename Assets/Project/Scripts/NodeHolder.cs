@@ -1,13 +1,6 @@
 using UnityEngine;
 
-/// <summary>
-///  
-/// </summary>
-
-public class NodeHolder : MonoBehaviour
+public class NodeHodler : MonoBehaviour
 {
-  
 
 }
-
-

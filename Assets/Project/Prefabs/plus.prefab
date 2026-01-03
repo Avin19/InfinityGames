@@ -11,7 +11,7 @@ GameObject:
   - component: {fileID: 8841952418058716287}
   - component: {fileID: 3121957943648401529}
   - component: {fileID: 2833054637991417991}
-  - component: {fileID: 6831032635541611001}
+  - component: {fileID: 6369799108834054552}
   m_Layer: 0
   m_Name: plus
   m_TagString: Untagged
@@ -28,7 +28,7 @@ Transform:
   m_GameObject: {fileID: 1085491255036140714}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -0.77745485, y: 2.6924195, z: -0.064416654}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -131,7 +131,7 @@ BoxCollider2D:
   serializedVersion: 2
   m_Size: {x: 1.1, y: 1.12}
   m_EdgeRadius: 0
---- !u!114 &6831032635541611001
+--- !u!114 &6369799108834054552
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -143,4 +143,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 88bfc9f9d83c21d4eb7e5d0816384595, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  connectons: 00000000
+  isPlusNode: 1
+  isStraightNode: 0
+  glowMaterial: {fileID: 2100000, guid: 6decbdf2938647d47b3805180244294e, type: 2}
+  normalMaterial: {fileID: 10754, guid: 0000000000000000f000000000000000, type: 0}

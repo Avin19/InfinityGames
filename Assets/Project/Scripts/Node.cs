@@ -2,124 +2,124 @@ using System;
 using UnityEngine;
 using Random = UnityEngine.Random;
 
-/// <summary>
-///  
-/// </summary>
-
 public class Node : MonoBehaviour
 {
-  private int rotationState = 0; // 0,1,2,3 represting 0 ,90 ,180 ,270 degree 
-  private const int maxRotationState = 4;
+  private const int MaxRotation = 4;
+  private int rotationState;
 
   public event EventHandler onNodeCliked;
-  private SpriteRenderer spriteRenderer;
-  private int correctRotation = 0;
-  private bool played;
-  [SerializeField] private Material glowMaterial;
-  [SerializeField] private Material normalMaterial;
+
+  [Header("Node Type")]
   [SerializeField] private bool isPlusNode;
   [SerializeField] private bool isStraightNode;
 
-  private void OnEnable()
-  {
-    played = false;
-    RandomPipeRotation();
-  }
+  [Header("Special Nodes")]
+  [SerializeField] private bool isStartNode;
+  [SerializeField] private bool isEndNode;
 
-  private void Start()
+  [Header("Materials")]
+  [SerializeField] private Material glowMaterial;
+  [SerializeField] private Material normalMaterial;
+
+  private SpriteRenderer spriteRenderer;
+  private bool isCorrect;
+  private bool soundPlayed;
+
+  // =========================
+  private void Awake()
   {
     spriteRenderer = GetComponent<SpriteRenderer>();
-    RandomPipeRotation();
   }
 
-  private void RandomPipeRotation()
+  private void OnEnable()
   {
- 
-    rotationState = Random.Range(1,3) % maxRotationState;
-    transform.rotation = Quaternion.Euler(0, 0, rotationState *90);
+    soundPlayed = false;
+
+    // Start & End should never rotate
+    if (!isStartNode && !isEndNode)
+    {
+      RandomizeRotation();
+    }
+
+    Evaluate();
   }
 
+  // =========================
   private void OnMouseDown()
   {
-    
-    if (isPlusNode)
-    {
-      spriteRenderer.sharedMaterial = glowMaterial;
-      if (!played)
-      {
-        AudioManager.Instance.NodeCorrectPosition();
-        played = true;
-      }
-    }
-    else
-    {
-      
-      RotateNode();
-    }
+    // Start & End are not interactive
+    if (isStartNode || isEndNode)
+      return;
+
+    Rotate();
+    Evaluate();
+
     onNodeCliked?.Invoke(this, EventArgs.Empty);
   }
 
-  private void RotateNode()
+  // =========================
+  private void Rotate()
   {
-    rotationState = (rotationState + 1) % maxRotationState;
-    transform.rotation = Quaternion.Euler(0, 0, rotationState *90);
- 
+    rotationState = (rotationState + 1) % MaxRotation;
+    transform.rotation = Quaternion.Euler(0, 0, rotationState * 90);
   }
 
-  private void Update()
+  private void RandomizeRotation()
   {
+    rotationState = Random.Range(0, MaxRotation);
+    transform.rotation = Quaternion.Euler(0, 0, rotationState * 90);
+  }
+
+  // =========================
+  private void Evaluate()
+  {
+    // Start & End are always correct
+    if (isStartNode || isEndNode)
+    {
+      SetCorrect(true);
+      return;
+    }
+
+    // Plus node is always valid
+    if (isPlusNode)
+    {
+      SetCorrect(true);
+      return;
+    }
+
+    // Straight pipes valid at 0 or 180
     if (isStraightNode)
     {
-       StraightNodeCheck();
+      SetCorrect(rotationState == 0 || rotationState == 2);
+      return;
     }
 
-    if(!isPlusNode && !isStraightNode)
-    {
-      TurnNodeCheck();
-    }
-   
+    // Corner pipes valid only at 0
+    SetCorrect(rotationState == 0);
   }
 
-  private void StraightNodeCheck()
+  // =========================
+  private void SetCorrect(bool value)
   {
-    if (Mathf.Approximately(correctRotation, transform.rotation.z)  ||  Mathf.Approximately(180, transform.rotation.z))
-    {
-      spriteRenderer.sharedMaterial = glowMaterial;
+    isCorrect = value;
+    spriteRenderer.sharedMaterial = value ? glowMaterial : normalMaterial;
 
-      if (!played)
-      {
-        AudioManager.Instance.NodeCorrectPosition();
-        played = true;
-      }
-    }
-    else
+    if (value && !soundPlayed)
     {
-      spriteRenderer.sharedMaterial = normalMaterial;
+      AudioManager.Instance.NodeCorrectPosition();
+      soundPlayed = true;
     }
   }
 
-  private void TurnNodeCheck()
-  {
-    if (Mathf.Approximately(correctRotation, transform.rotation.z))
-    {
-      spriteRenderer.sharedMaterial = glowMaterial;
-
-      if (!played)
-      {
-        AudioManager.Instance.NodeCorrectPosition();
-        played = true;
-      }
-    }
-    else
-    {
-      spriteRenderer.sharedMaterial = normalMaterial;
-    }
-  }
-
+  // =========================
+  // CALLED BY GRID MANAGER
+  // =========================
   public bool ConnectionStatus()
   {
-    return played;
+    // Start & End are always correct
+    if (isStartNode || isEndNode)
+      return true;
+
+    return isCorrect;
   }
 }
-
-

@@ -1,182 +1,91 @@
-using System;
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 
-
 public class GameManager : MonoBehaviour
 {
   public static GameManager Instance { get; private set; }
-  public event EventHandler onLevel;
 
-  [Header("MainMenuButton")]
-
+  [Header("UI")]
   [SerializeField] private Button startBtn;
+  [SerializeField] private Button nextLevelBtn;
   [SerializeField] private Button quitBtn;
-  [SerializeField] private Button settingBtn;
 
-  [Header(" Panel")]
   [SerializeField] private GameObject mainMenuPanel;
-
-  [SerializeField] private GameObject levelPanel;
   [SerializeField] private GameObject gamePanel;
-  [SerializeField] private GameObject settingPanel;
   [SerializeField] private GameObject winPanel;
 
-  [Header("Level")]
-  [SerializeField] private GameObject[] levels;
-
-  private GameObject nodeHolder;
   [SerializeField] private TextMeshProUGUI levelText;
-  [SerializeField] private TextMeshProUGUI levelText2;
-  [SerializeField] private int currentLevel = 0;
 
-  [Header("LevelButton")]
-  [SerializeField]
-  private Button[] levelBtn;
+  [Header("Managers")]
+  [SerializeField] private GridManager gridManager;
+
+  private int level;
+
   private void Awake()
   {
     if (Instance != null)
     {
-      Destroy(this.gameObject);
+      Destroy(gameObject);
+      return;
     }
 
     Instance = this;
-    startBtn.onClick.AddListener(() => StartGame());
-    settingBtn.onClick.AddListener(() => SettingGame());
-    quitBtn.onClick.AddListener(() => Application.Quit());
 
+    startBtn.onClick.AddListener(StartGame);
+    nextLevelBtn.onClick.AddListener(NextLevel);
+    quitBtn.onClick.AddListener(Application.Quit);
   }
 
   private void Start()
   {
-    ResettingLevel();
-    SetAllPanelsFalse();
+    level = PlayerPrefs.GetInt("Level", 1);
+    UpdateLevelText();
+
     mainMenuPanel.SetActive(true);
-
-
-    currentLevel = (int)PlayerPrefs.GetFloat("CurrentLevel");
-    levelText.text = $" Level : {currentLevel + 1}";
-    levelText2.text = $" Level : {currentLevel + 1}";
-  }
-
-  private void SetAllPanelsFalse()
-  {
-    mainMenuPanel.SetActive(false);
-    levelPanel.SetActive(false);
-    settingPanel.SetActive(false);
     gamePanel.SetActive(false);
     winPanel.SetActive(false);
   }
+
+  // =========================
   public void StartGame()
   {
-    SetAllPanelsFalse();
     AudioManager.Instance.ButtonClick();
-    levelPanel.SetActive(true);
-    LockLevel();
-    AdManager.Instance.ShowBanner();
+
+    mainMenuPanel.SetActive(false);
+    winPanel.SetActive(false);
+    gamePanel.SetActive(true);
+
+    gridManager.GenerateGrid(level);
   }
 
-  private void LockLevel()
-  {
-    for (int i = 0; i < levelBtn.Length; i++)
-    {
-      if (i <= currentLevel)
-      {
-        levelBtn[i].GetComponent<Image>().color = Color.white;
-      }
-      else
-      {
-        levelBtn[i].GetComponent<Image>().color = Color.red;
-      }
-    }
-  }
-  public void LevelSetting(int level)
-  {
-
-    if (level <= currentLevel)
-    {
-      ResettingLevel();
-      AudioManager.Instance.ButtonClick();
-      SetAllPanelsFalse();
-      gamePanel.SetActive(true);
-
-      levels[level].SetActive(true);
-      nodeHolder = levels[level].GetComponentInChildren<NodeHolder>().gameObject;
-      onLevel?.Invoke(this, EventArgs.Empty);
-    }
-
-  }
-
-  public void SettingGame()
-  {
-    AudioManager.Instance.ButtonClick();
-    SetAllPanelsFalse();
-    settingPanel.SetActive(true);
-  }
-
-  private void ResettingLevel()
-  {
-    foreach (GameObject l in levels)
-    {
-      l.SetActive(false);
-    }
-  }
-
-  public void BackBtnGame()
-  {
-    AudioManager.Instance.ButtonClick();
-    SetAllPanelsFalse();
-    ResettingLevel();
-    levelPanel.SetActive(true);
-    AdManager.Instance.ShowInterstitial();
-  }
-
-  public void LevelBackBtn()
-  {
-    AudioManager.Instance.ButtonClick();
-    SetAllPanelsFalse();
-    mainMenuPanel.SetActive(true);
-    AdManager.Instance.ShowRewarded();
-
-  }
-
-
-
-  public GameObject GetNodeHolder()
-  {
-    return nodeHolder;
-  }
-
-
+  // =========================
   public void LevelCompleted()
   {
     AudioManager.Instance.LevelWin();
-    SetAllPanelsFalse();
+
+    gamePanel.SetActive(false);
     winPanel.SetActive(true);
-    if (currentLevel < levels.Length - 1)
-    {
-      currentLevel++;
-    }
-    else
-    {
-      currentLevel = 0;
-    }
-    levelText.text = $" Level : {currentLevel + 1}";
-    levelText2.text = $" Level : {currentLevel + 1}";
-    PlayerPrefs.SetFloat("CurrentLevel", currentLevel);
-    Invoke("BackToLevel", 1f);
   }
 
-  private void BackToLevel()
+  // =========================
+  public void NextLevel()
   {
-    SetAllPanelsFalse();
-    LockLevel();
-    BackBtnGame();
-    AdManager.Instance.ShowInterstitial();
+    AudioManager.Instance.ButtonClick();
 
+    level++;
+    PlayerPrefs.SetInt("Level", level);
+    UpdateLevelText();
+
+    winPanel.SetActive(false);
+    gamePanel.SetActive(true);
+
+    gridManager.GenerateGrid(level);
   }
 
+  private void UpdateLevelText()
+  {
+    if (levelText != null)
+      levelText.text = $"Level {level}";
+  }
 }
-
-
