@@ -83,6 +83,7 @@ public class GameManager : MonoBehaviour
   private void Start()
   {
     CurrentLevel = PlayerPrefs.GetInt("Level", 1);
+    AdMobManager.Instance.ShowBanner();
     ShowMenu();
   }
 
@@ -221,18 +222,20 @@ public class GameManager : MonoBehaviour
     replayBtn.gameObject.SetActive(false);
     AdMobManager.Instance.ShowRewarded(() =>
     {
-      remainingTime += extraTimeFromAd;
       ResumeAfterAd();
     });
   }
 
   private void ResumeAfterAd()
   {
-    nextBtn.gameObject.SetActive(true);
-    replayBtn.gameObject.SetActive(true);
-    isLevelRunning = true;
     winPanel.SetActive(false);
     gamePanel.SetActive(true);
+    nextBtn.gameObject.SetActive(true);
+    remainingTime += extraTimeFromAd;
+    remainingMoves += extraMovesFromAd;
+    replayBtn.gameObject.SetActive(true);
+    isLevelRunning = true;
+
     StartGame();
   }
 }

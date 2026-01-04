@@ -1945,7 +1945,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 3578856636714919883, guid: bdd0fc02cd60d9a4980f4bc6bba3f91f, type: 3}
       propertyPath: m_AnchoredPosition.y
-      value: 57
+      value: 51.1
       objectReference: {fileID: 0}
     - target: {fileID: 3578856636714919883, guid: bdd0fc02cd60d9a4980f4bc6bba3f91f, type: 3}
       propertyPath: m_LocalEulerAnglesHint.x
@@ -2912,7 +2912,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 0, y: 0}
+  m_AnchoredPosition: {x: 0, y: -16}
   m_SizeDelta: {x: 900, y: 1000}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &843544073
@@ -5590,7 +5590,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   bannerAdUnitId: ca-app-pub-1779486678797596/1850340463
   interstitialAdUnitId: ca-app-pub-1779486678797596/2042105678
-  rewardedAdUnitId: ca-app-pub-1779486678797596/8043395485
+  rewardedAdUnitId: ca-app-pub-1779486678797596/8817376943
+  config: {fileID: 11400000, guid: 3f4a4421fe32a134ca7426d7cb4c97af, type: 2}
 --- !u!1 &2007660708
 GameObject:
   m_ObjectHideFlags: 0
