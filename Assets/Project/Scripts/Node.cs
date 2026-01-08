@@ -1,125 +1,83 @@
 using System;
 using UnityEngine;
-using Random = UnityEngine.Random;
 
 public class Node : MonoBehaviour
 {
-  private const int MaxRotation = 4;
-  private int rotationState;
-
   public event EventHandler onNodeCliked;
 
-  [Header("Node Type")]
-  [SerializeField] private bool isPlusNode;
-  [SerializeField] private bool isStraightNode;
+  [SerializeField] private bool isPlus;
+  [SerializeField] private bool isStraight;
+  [SerializeField] private bool isStart;
+  [SerializeField] private bool isEnd;
 
-  [Header("Special Nodes")]
-  [SerializeField] private bool isStartNode;
-  [SerializeField] private bool isEndNode;
+  [SerializeField] private Material glow;
+  [SerializeField] private Material normal;
 
-  [Header("Materials")]
-  [SerializeField] private Material glowMaterial;
-  [SerializeField] private Material normalMaterial;
+  private CameraController camController;
 
-  private SpriteRenderer spriteRenderer;
-  private bool isCorrect;
-  private bool soundPlayed;
+  private SpriteRenderer sr;
+  private int rot;
+  private bool correct;
+  private bool played;
 
-  // =========================
   private void Awake()
   {
-    spriteRenderer = GetComponent<SpriteRenderer>();
+    camController = Camera.main.GetComponent<CameraController>();
+
+    sr = GetComponent<SpriteRenderer>();
   }
 
   private void OnEnable()
   {
-    soundPlayed = false;
-
-    // Start & End should never rotate
-    if (!isStartNode && !isEndNode)
-    {
-      RandomizeRotation();
-    }
+    if (!isStart && !isEnd)
+      RandomRotate();
 
     Evaluate();
   }
 
-  // =========================
   private void OnMouseDown()
   {
-    // Start & End are not interactive
-    if (isStartNode || isEndNode)
+    if (camController != null && !camController.IsSettled)
       return;
 
-    Rotate();
-    Evaluate();
+    if (isStart || isEnd)
+      return;
 
+    rot = (rot + 1) % 4;
+    transform.rotation = Quaternion.Euler(0, 0, rot * 90);
+
+    Evaluate();
     onNodeCliked?.Invoke(this, EventArgs.Empty);
   }
 
-  // =========================
-  private void Rotate()
+
+  private void RandomRotate()
   {
-    rotationState = (rotationState + 1) % MaxRotation;
-    transform.rotation = Quaternion.Euler(0, 0, rotationState * 90);
+    rot = UnityEngine.Random.Range(0, 4);
+    transform.rotation = Quaternion.Euler(0, 0, rot * 90);
   }
 
-  private void RandomizeRotation()
-  {
-    rotationState = Random.Range(0, MaxRotation);
-    transform.rotation = Quaternion.Euler(0, 0, rotationState * 90);
-  }
-
-  // =========================
   private void Evaluate()
   {
-    // Start & End are always correct
-    if (isStartNode || isEndNode)
-    {
-      SetCorrect(true);
-      return;
-    }
-
-    // Plus node is always valid
-    if (isPlusNode)
-    {
-      SetCorrect(true);
-      return;
-    }
-
-    // Straight pipes valid at 0 or 180
-    if (isStraightNode)
-    {
-      SetCorrect(rotationState == 0 || rotationState == 2);
-      return;
-    }
-
-    // Corner pipes valid only at 0
-    SetCorrect(rotationState == 0);
+    if (isStart || isEnd || isPlus)
+      Set(true);
+    else if (isStraight)
+      Set(rot == 0 || rot == 2);
+    else
+      Set(rot == 0);
   }
 
-  // =========================
-  private void SetCorrect(bool value)
+  private void Set(bool v)
   {
-    isCorrect = value;
-    spriteRenderer.sharedMaterial = value ? glowMaterial : normalMaterial;
+    correct = v;
+    sr.sharedMaterial = v ? glow : normal;
 
-    if (value && !soundPlayed)
+    if (v && !played)
     {
       AudioManager.Instance.NodeCorrectPosition();
-      soundPlayed = true;
+      played = true;
     }
   }
 
-  // =========================
-  // CALLED BY GRID MANAGER
-  // =========================
-  public bool ConnectionStatus()
-  {
-    // Start & End are always correct
-    if (isStartNode || isEndNode)
-      return true;
-
-    return isCorrect;
-  }
+  public bool ConnectionStatus() => correct;
 }

@@ -1,32 +1,40 @@
 using UnityEngine;
 using GoogleMobileAds.Api;
 using System;
+using System.Collections;
 
 public class AdMobManager : MonoBehaviour
 {
     public static AdMobManager Instance { get; private set; }
 
-    [Header("Test Ad Unit IDs (Replace Before Release)")]
-    [SerializeField]
-    private string bannerAdUnitId =
-        "ca-app-pub-1779486678797596/1850340463";
+    [SerializeField] private AdConfig config;
 
-    [SerializeField]
-    private string interstitialAdUnitId =
-        "ca-app-pub-1779486678797596/2042105678";
-
-    [SerializeField]
-    private string rewardedAdUnitId =
-        "ca-app-pub-1779486678797596/8043395485";
-
+    // =========================
+    // Banner
+    // =========================
     private BannerView bannerView;
+    private bool isBannerLoaded;
+    private bool isBannerLoading;
+    private float currentBannerRetryDelay;
+
+    // =========================
+    // Interstitial
+    // =========================
     private InterstitialAd interstitialAd;
+    private int interstitialEventCounter;
+    private float lastInterstitialTime;
+
+    // =========================
+    // Rewarded
+    // =========================
     private RewardedAd rewardedAd;
-    private int loadingAttemp = 0;
+    private bool isRewardedLoading;
+    private bool isRewardedReady;
+
+    #region Unity Lifecycle
 
     private void Awake()
     {
-        // Singleton
         if (Instance != null && Instance != this)
         {
             Destroy(gameObject);
@@ -39,50 +47,136 @@ public class AdMobManager : MonoBehaviour
 
     private void Start()
     {
-        MobileAds.Initialize(status =>
+        if (config == null)
         {
-            Debug.Log("AdMob initialized");
-            LoadBanner();
-            LoadInterstitial();
-            LoadRewarded();
-        });
-    }
+            Debug.LogError("AdConfig missing");
+            return;
+        }
 
-    // =========================
-    // BANNER
-    // =========================
-    public void SetLoadingAttempt()
-    {
-        loadingAttemp = 0;
-    }
-    public void LoadBanner()
-    {
-        bannerView?.Destroy();
+        currentBannerRetryDelay = config.bannerRetryInitialDelay;
 
-        bannerView = new BannerView(
-            bannerAdUnitId,
-            AdSize.Banner,
-            AdPosition.Bottom
-        );
-
-        AdRequest request = new AdRequest();
-        bannerView.LoadAd(request);
-    }
-
-    public void ShowBanner()
-    {
-        Debug.Log(loadingAttemp);
-        if (loadingAttemp > 3) return;
-        if (bannerView != null)
+        if (config.enableGdprConsent && config.requestConsentOnStartup)
         {
-            bannerView.Show();
-            loadingAttemp++;
-
+            // ✅ GDPR-enabled flow
+            GdprConsentManager.RequestConsent(OnConsentResolved);
         }
         else
         {
-            LoadBanner();
+            // ⚠️ GDPR bypass (DEV / NON-EEA ONLY)
+            Debug.LogWarning("GDPR consent disabled via AdConfig");
+            InitializeAdMob();
         }
+    }
+    private void OnConsentResolved()
+    {
+        Debug.Log($"Consent resolved. CanRequestAds = {GdprConsentManager.CanRequestAds}");
+
+        if (!GdprConsentManager.CanRequestAds)
+        {
+            Debug.LogWarning("Ads blocked due to GDPR consent");
+            return;
+        }
+
+        InitializeAdMob();
+    }
+    private void InitializeAdMob()
+    {
+        MobileAds.Initialize(_ =>
+        {
+            Debug.Log("AdMob initialized");
+
+            if (config.loadBannerOnStart)
+                LoadBanner();
+
+            LoadInterstitial();
+
+            if (config.preloadRewarded)
+                LoadRewarded();
+        });
+    }
+
+
+    private void OnDestroy()
+    {
+        bannerView?.Destroy();
+        interstitialAd?.Destroy();
+    }
+
+    #endregion
+
+    // =========================================================
+    // BANNER
+    // =========================================================
+
+    private void LoadBanner()
+    {
+        if (isBannerLoading || bannerView != null)
+            return;
+
+        isBannerLoading = true;
+        isBannerLoaded = false;
+
+        // 🔥 Adaptive banner (recommended)
+        AdSize adaptiveSize =
+            AdSize.GetCurrentOrientationAnchoredAdaptiveBannerAdSizeWithWidth(
+                AdSize.FullWidth);
+
+        bannerView = new BannerView(
+            config.bannerId,
+            adaptiveSize,
+            AdPosition.Bottom
+        );
+
+        bannerView.OnBannerAdLoaded += () =>
+        {
+            Debug.Log("Banner loaded");
+            isBannerLoaded = true;
+            isBannerLoading = false;
+
+            // reset retry delay on success
+            currentBannerRetryDelay = config.bannerRetryInitialDelay;
+
+            if (config.autoShowBanner)
+                bannerView.Show();
+        };
+
+        bannerView.OnBannerAdLoadFailed += error =>
+        {
+            Debug.LogWarning($"Banner failed (No fill is normal): {error}");
+            isBannerLoaded = false;
+            isBannerLoading = false;
+            ScheduleBannerRetry();
+        };
+
+        bannerView.LoadAd(new AdRequest());
+    }
+
+    private void ScheduleBannerRetry()
+    {
+        bannerView?.Destroy();
+        bannerView = null;
+
+        Debug.Log($"Retrying banner in {currentBannerRetryDelay} seconds");
+
+        Invoke(nameof(LoadBanner), currentBannerRetryDelay);
+
+        currentBannerRetryDelay = Mathf.Min(
+            currentBannerRetryDelay * 2f,
+            config.bannerRetryMaxDelay
+        );
+    }
+
+    public bool IsBannerLoaded() => isBannerLoaded;
+
+    public void ShowBanner()
+    {
+        if (!isBannerLoaded || bannerView == null)
+        {
+            LoadBanner();
+            return;
+        }
+
+        bannerView.Show();
     }
 
     public void HideBanner()
@@ -90,39 +184,50 @@ public class AdMobManager : MonoBehaviour
         bannerView?.Hide();
     }
 
-    // =========================
+    // =========================================================
     // INTERSTITIAL
-    // =========================
+    // =========================================================
 
-    public void LoadInterstitial()
+    private void LoadInterstitial()
     {
-        if (interstitialAd != null)
-        {
-            interstitialAd.Destroy();
-            interstitialAd = null;
-        }
+        interstitialAd?.Destroy();
+        interstitialAd = null;
 
-        AdRequest request = new AdRequest();
-
-        InterstitialAd.Load(interstitialAdUnitId, request,
-            (InterstitialAd ad, LoadAdError error) =>
+        InterstitialAd.Load(
+            config.interstitialId,
+            new AdRequest(),
+            (ad, error) =>
             {
                 if (error != null)
                 {
-                    Debug.LogError("Interstitial failed: " + error);
+                    Debug.LogWarning("Interstitial load failed: " + error);
                     return;
                 }
 
                 interstitialAd = ad;
+                Debug.Log("Interstitial loaded");
             });
     }
 
-    public void ShowInterstitial()
+    /// <summary>
+    /// Call on GameOver / LevelComplete
+    /// </summary>
+    public void TryShowInterstitial()
     {
+        interstitialEventCounter++;
+
+        if (interstitialEventCounter < config.interstitialEveryNEvents)
+            return;
+
+        if (Time.time - lastInterstitialTime < config.interstitialCooldownSeconds)
+            return;
+
         if (interstitialAd != null && interstitialAd.CanShowAd())
         {
             interstitialAd.Show();
-            LoadInterstitial(); // Preload next
+            lastInterstitialTime = Time.time;
+            interstitialEventCounter = 0;
+            LoadInterstitial();
         }
         else
         {
@@ -130,52 +235,69 @@ public class AdMobManager : MonoBehaviour
         }
     }
 
-    // =========================
+    // =========================================================
     // REWARDED
-    // =========================
+    // =========================================================
 
-    public void LoadRewarded()
+    private void LoadRewarded()
     {
-        AdRequest request = new AdRequest();
+        if (isRewardedLoading)
+            return;
 
-        RewardedAd.Load(rewardedAdUnitId, request,
-            (RewardedAd ad, LoadAdError error) =>
+        isRewardedLoading = true;
+        isRewardedReady = false;
+
+        Debug.Log("Loading rewarded ad...");
+
+        RewardedAd.Load(
+            config.rewardedId,
+            new AdRequest(),
+            (ad, error) =>
             {
+                isRewardedLoading = false;
+
                 if (error != null)
                 {
-                    Debug.LogError("Rewarded failed: " + error);
+                    Debug.LogWarning("Rewarded load failed: " + error);
+                    Invoke(nameof(LoadRewarded), 5f);
                     return;
                 }
 
                 rewardedAd = ad;
+                isRewardedReady = true;
+
+                rewardedAd.OnAdFullScreenContentClosed += () =>
+                {
+                    LoadRewarded();
+                };
+
+                Debug.Log("Rewarded ready");
             });
     }
+
+    public bool IsRewardedReady() => isRewardedReady;
 
     public void ShowRewarded(Action onRewardGranted)
     {
-        if (rewardedAd != null && rewardedAd.CanShowAd())
+        if (!isRewardedReady || rewardedAd == null)
         {
-            rewardedAd.Show(reward =>
-            {
-                Debug.Log($"Reward: {reward.Amount} {reward.Type}");
-                onRewardGranted?.Invoke();
-            });
+            Debug.Log("Rewarded not ready");
+            return;
+        }
 
-            LoadRewarded(); // Preload next
-        }
-        else
+        rewardedAd.Show(_ =>
         {
-            Debug.Log("Rewarded ad not ready");
-        }
+            // 🔒 SAFE: wait for graphics device restore
+            StartCoroutine(InvokeAfterFrame(onRewardGranted));
+        });
+
+        isRewardedReady = false;
     }
 
-    // =========================
-    // CLEANUP
-    // =========================
-
-    private void OnDestroy()
+    private IEnumerator InvokeAfterFrame(Action action)
     {
-        bannerView?.Destroy();
-        interstitialAd?.Destroy();
+        yield return new WaitForEndOfFrame();
+        yield return null;
+        action?.Invoke();
     }
 }
